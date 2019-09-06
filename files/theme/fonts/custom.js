@@ -55,10 +55,18 @@ jQuery(function($) {
       // Add classes to elements
       base._addClasses();
 
+      if(!$('body').hasClass('wsite-editor') && $('#wsite-nav-cart-a').length) {
+        $('#wsite-nav-cart-a').html($('#wsite-nav-cart-a').html().replace(/[()]/g, ''));
+      }
 
       setTimeout(function(){
+        base._checkCartItems();
         base._attachEvents();
-      }, 1000);
+        if($('#wsite-nav-cart-a').length) {
+          $('#wsite-nav-cart-a').html($('#wsite-nav-cart-a').html().replace(/[()]/g, ''));
+        }
+        $('.banner-wrap .container').css("padding-top", $('.birdseye-header').outerHeight() + "px");
+      }, 1500);
     },
 
     _addClasses: function() {
@@ -88,13 +96,17 @@ jQuery(function($) {
       });
 
         // Keep subnav open if submenu item is active
-        $('li.wsite-menu-subitem-wrap.wsite-nav-current').parents('.wsite-menu-wrap').addClass('open');
+        if ($(window).width() < 1024) {
+          $('li.wsite-menu-subitem-wrap.wsite-nav-current').parents('.wsite-menu-wrap').addClass('open');
+        }
 
       // Add placeholder text to inputs
-      $('.wsite-form-sublabel').each(function(){
-        var sublabel = $(this).text();
-        $(this).prev('.wsite-form-input').attr('placeholder', sublabel);
-      });
+      setTimeout(function(){
+        $('.wsite-form-sublabel').each(function(){
+            var sublabel = $(this).text();
+            $(this).prev('.wsite-form-input').attr('placeholder', sublabel);
+          });
+        }, 1000);
     },
 
     _checkCartItems: function() {
@@ -107,19 +119,36 @@ jQuery(function($) {
     },
 
     _moveLogin: function() {
-      var loginDetach = $('#member-login').detach();
-      $('.mobile-nav .wsite-menu-default > li:last-child').after(loginDetach);
+      var login = $('#member-login').clone(true);
+      $('.mobile-nav .wsite-menu-default > li:last-child').after(login);
     },
 
     _moveFlyout: function() {
-      var move = $("#wsite-menus").detach();
+      var maxheight = $(window).height() - $('.birdseye-header').outerHeight();
+      var anchor = true;
+
+      $('#wsite-menus .wsite-menu-wrap').each(function() {
+        if ($(this).outerHeight() > maxheight) {
+          anchor = false;
+        }
+      });
+
+      if (anchor) {
+        var move = $("#wsite-menus").detach();
+        $(".birdseye-header").append(move);
+      }
+    },
+
+    _moveCart: function() {
+      var move = $("#wsite-mini-cart").detach();
       $(".birdseye-header").append(move);
     },
 
     _attachEvents: function() {
-    	var base = this;
+      var base = this;
 
-        $('label.hamburger').on('click', function() {
+        $('.hamburger').on('click', function(e) {
+            e.preventDefault();
             if (!$('body').hasClass('nav-open')) {
                 $('body').addClass('nav-open');
             } else {
@@ -128,18 +157,19 @@ jQuery(function($) {
         });
 
         // Move cart + login
-        if ($(window).width() <= 992) {
-            $.fn.intervalLoop('.mobile-nav #member-login', base._moveLogin, 800, 5);
-        }
+        $.fn.intervalLoop('.mobile-nav #member-login', base._moveLogin, 800, 5);
 
         // Move Flyout
         $.fn.intervalLoop('.birdseye-header #wsite-menus', base._moveFlyout, 300, 8);
+
+        // Move Cart
+        $.fn.intervalLoop('.birdseye-header #wsite-mini-cart', base._moveCart, 300, 8);
 
         // Check Cart
 
         $.fn.intervalLoop('body.cart-full', base._checkCartItems, 300, 10);
 
-      	// Window scroll
+        // Window scroll
 
         // Fixed header
         $(window).on('scroll', function() {
@@ -163,7 +193,7 @@ jQuery(function($) {
       // Search filters dropdown
       $('#wsite-search-sidebar').expandableSidebar('sidebar-expanded');
 
-    	// Init fancybox swipe on mobile
+      // Init fancybox swipe on mobile
       if ('ontouchstart' in window) {
         $('body').on('click', 'a.w-fancybox', function() {
           base._initSwipeGallery();
@@ -190,6 +220,6 @@ jQuery(function($) {
   }
 
   $(document).ready(function(){
-  	birdseyeController.init();
+    birdseyeController.init();
   });
 });
